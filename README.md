@@ -1,12 +1,21 @@
-# DeskStat 0.3
+# DeskStat 0.3.5
 
 A native macOS desktop monitor with independent text widgets, terminal-style meters, and a monochrome monitor icon in the menu bar. Requires macOS 13 or later. This build is for Apple silicon.
+
+## What’s new in 0.3.5
+
+- Battery & Power shows charge, power source, and estimated time remaining when available.
+- Network Activity shows upload and download rates with sparklines.
+- Now Playing shows track, artist, and progress from Apple Music. macOS may request Automation permission.
+- The in-app settings editor validates edits and saves them to the same config file. The config comments list supported settings, ranges, and theme colors.
+
+[Download v0.3.5 and view the release notes](https://github.com/Grrck-Git/deskstat/releases/tag/v0.3.5)
 
 ## Start and upgrade
 
 Quit the previous DeskStat, then open DeskStat.app. Existing settings continue to work and gain a ChatGPT input widget. To enable the full layout, choose **Use New Widget Layout…** from the DeskStat menu. The app saves your existing settings in a uniquely named backup before replacing them.
 
-The full layout contains system metrics, weather setup, an example market watchlist, ChatGPT input, Fastfetch, and a four-zone work clock. The reset layout uses your saved positions and sizes from this version. The Fastfetch widget is enabled in the default layout. The shared weather default is Washington DC. Set your preferred location and market symbols with **Open Settings**, then choose **Save & Apply**.
+The full layout contains system metrics, weather, an example market watchlist, ChatGPT input, Fastfetch, a four-zone world clock, Battery & Power, Network Activity, and Now Playing. The reset layout uses your saved positions and sizes from this version. The Fastfetch widget is enabled in the default layout. The shared weather default is Washington DC. Set your preferred location and market symbols with **Open Settings**, then choose **Save & Apply**.
 
 **Open Settings** opens a plain-text editor inside DeskStat. **Save & Apply** validates the settings, writes the same config file, and refreshes the widgets. **Edit Config File…** opens the file in your external editor. After external edits, choose **Reload Settings** to refresh the widgets, or **Reload From File** in the panel to refresh the editor.
 
@@ -20,7 +29,7 @@ All widgets accept these settings.
 
 | Setting | Meaning |
 | --- | --- |
-| `type` | `metrics`, `command`, `weather`, `markets`, `clock`, or `chatgpt` |
+| `type` | `metrics`, `command`, `weather`, `markets`, `clock`, `chatgpt`, `battery`, `network`, or `now_playing` |
 | `enabled` | `true` or `false`, default true |
 | `left`, `top` | Offset in points from the primary display's usable top-left corner |
 | `width`, `height` | Fixed widget size in points |
