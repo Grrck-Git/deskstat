@@ -44,6 +44,7 @@ final class WidgetController: NSObject {
     private let clockView: StyledClockView?
     private let cornerRadius: CGFloat
     private var metrics: [any Metric] = []
+    private var network = NetworkActivity()
     private var timer: Timer?
     private var task: Task<Void, Never>?
     private var reading: CachedReading?
@@ -132,6 +133,7 @@ final class WidgetController: NSObject {
             case "weather": minimum = 900
             case "markets": minimum = 300
             case "command": minimum = 5
+            case "now_playing": minimum = 3
             default: minimum = 1
             }
             let interval = max(minimum, settings.interval)
@@ -248,6 +250,16 @@ final class WidgetController: NSObject {
         guard !stopped, task == nil else { return }
         switch settings.type {
         case "chatgpt": return
+        case "battery":
+            display(batteryText())
+            return
+        case "network":
+            display(network.sample())
+            return
+        case "now_playing" where NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.Music").isEmpty:
+            reading = nil
+            display("Open Apple Music to see playback.")
+            return
         case "clock":
             if let clockView { clockView.update(clock!.readings()) }
             else { display(clock!.sample()) }
@@ -268,6 +280,7 @@ final class WidgetController: NSObject {
                 let body: String
                 switch settings.type {
                 case "command": body = try await commandText(settings)
+                case "now_playing": body = try await nowPlayingText(settings)
                 case "weather":
                     if location == nil { location = try await weatherLocation(settings) }
                     body = try await weatherText(settings, location: location!)
@@ -276,7 +289,12 @@ final class WidgetController: NSObject {
                 }
                 try Task.checkCancellation()
                 guard !stopped else { return }
-                save(body)
+                if settings.type == "now_playing" {
+                    reading = CachedReading(text: body, date: Date())
+                    display(body)
+                } else {
+                    save(body)
+                }
             } catch {
                 guard !Task.isCancelled, !stopped else { return }
                 let previous = reading.map { $0.text + "\nLast success " + self.stamp($0.date) + "\n" } ?? ""
@@ -320,6 +338,7 @@ final class DeskStat: NSObject, NSApplicationDelegate {
         .appendingPathComponent("Library/Application Support/DeskStat/deskstat.conf")
     private var widgets: [WidgetController] = []
     private var item: NSStatusItem?
+    private var settingsWindow: SettingsWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -331,6 +350,7 @@ final class DeskStat: NSObject, NSApplicationDelegate {
         }
         let menu = NSMenu()
         for (title, action) in [("Open Settings", #selector(openSettings)),
+                                ("Edit Config File…", #selector(editConfigFile)),
                                 ("Reload Settings", #selector(reload)),
                                 ("Use New Widget Layout…", #selector(useExample)),
                                 ("Open Widget Guide", #selector(openGuide)),
@@ -388,29 +408,32 @@ final class DeskStat: NSObject, NSApplicationDelegate {
         do {
             try ensureConfig()
             let source = try String(contentsOf: config, encoding: .utf8)
-            let next = try Settings(source)
-            var layout = next.widgets
-            // Preserve the original panel and add the requested input widget for old configurations.
-            if next.legacy {
-                var chat = WidgetSettings(id: "chatgpt")
-                chat.type = "chatgpt"
-                chat.top = 200
-                chat.height = 160
-                layout.append(chat)
-            }
-            let enabled = layout.filter(\.enabled)
-            for widget in widgets { widget.stop() }
-            widgets = enabled.map {
-                WidgetController($0, textColor: next.textColor, backgroundColor: next.backgroundColor,
-                                 backgroundOpacity: next.backgroundOpacity, cornerRadius: next.cornerRadius)
-            }
+            apply(try Settings(source))
         } catch { show(error) }
+    }
+
+    private func apply(_ next: Settings) {
+        var layout = next.widgets
+        // Preserve the original panel and add the requested input widget for old configurations.
+        if next.legacy {
+            var chat = WidgetSettings(id: "chatgpt")
+            chat.type = "chatgpt"
+            chat.top = 200
+            chat.height = 160
+            layout.append(chat)
+        }
+        let enabled = layout.filter(\.enabled)
+        for widget in widgets { widget.stop() }
+        widgets = enabled.map {
+            WidgetController($0, textColor: next.textColor, backgroundColor: next.backgroundColor,
+                             backgroundOpacity: next.backgroundOpacity, cornerRadius: next.cornerRadius)
+        }
     }
 
     @objc private func useExample() {
         let alert = NSAlert()
         alert.messageText = "Use the default widget layout?"
-        alert.informativeText = "This restores the saved default positions and sizes for the system, weather, market, ChatGPT, Fastfetch, and clock widgets, along with the global colors, background opacity, and corner radius. Your current settings will be saved beside the settings file as a backup. Weather uses the saved default location. The market symbols are examples."
+        alert.informativeText = "This restores the saved default positions and sizes for the system, weather, market, ChatGPT, Fastfetch, clock, battery, network, and Now Playing widgets, along with the global colors, background opacity, and corner radius. Your current settings will be saved beside the settings file as a backup. Weather uses the saved default location. The market symbols are examples."
         alert.addButton(withTitle: "Use Layout")
         alert.addButton(withTitle: "Cancel")
         NSApp.activate(ignoringOtherApps: true)
@@ -428,6 +451,19 @@ final class DeskStat: NSObject, NSApplicationDelegate {
     }
 
     @objc private func openSettings() {
+        do {
+            try ensureConfig()
+            let source = try String(contentsOf: config, encoding: .utf8)
+            if settingsWindow == nil {
+                settingsWindow = SettingsWindow(config: config, source: source) { [weak self] next in
+                    self?.apply(next)
+                }
+            }
+            settingsWindow?.show(source: source)
+        } catch { show(error) }
+    }
+
+    @objc private func editConfigFile() {
         do {
             try ensureConfig()
             if let editor = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.TextEdit") {

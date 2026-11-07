@@ -6,7 +6,9 @@ A native macOS desktop monitor with independent text widgets, terminal-style met
 
 Quit the previous DeskStat, then open DeskStat.app. Existing settings continue to work and gain a ChatGPT input widget. To enable the full layout, choose **Use New Widget Layout…** from the DeskStat menu. The app saves your existing settings in a uniquely named backup before replacing them.
 
-The full layout contains system metrics, weather setup, an example market watchlist, ChatGPT input, Fastfetch, and a four-zone work clock. The reset layout uses your saved positions and sizes from this version. The Fastfetch widget is enabled in the default layout. The shared weather default is Washington DC. Set your preferred location and market symbols with **Open Settings**, save, then choose **Reload Settings**.
+The full layout contains system metrics, weather setup, an example market watchlist, ChatGPT input, Fastfetch, and a four-zone work clock. The reset layout uses your saved positions and sizes from this version. The Fastfetch widget is enabled in the default layout. The shared weather default is Washington DC. Set your preferred location and market symbols with **Open Settings**, then choose **Save & Apply**.
+
+**Open Settings** opens a plain-text editor inside DeskStat. **Save & Apply** validates the settings, writes the same config file, and refreshes the widgets. **Edit Config File…** opens the file in your external editor. After external edits, choose **Reload Settings** to refresh the widgets, or **Reload From File** in the panel to refresh the editor.
 
 Settings live at `~/Library/Application Support/DeskStat/deskstat.conf`. An invalid file produces an error and leaves the active layout running. **Open Widget Guide** opens this guide.
 
@@ -195,3 +197,9 @@ GitHub release packages are built from the committed source archive, which conta
 `--check-config` validates the layout without opening windows or running commands. `--sample` also prints live system metrics and clock rows.
 
 Each metric implements the `Metric` protocol and is registered in `metricFactories`. The widget controller owns one desktop panel, refresh timer, and asynchronous job per widget. Network providers and command execution are separated from display and config parsing.
+
+## Activity widgets
+
+Use `type = battery` for charge, power source, and the Mac's estimated time remaining. Use `type = network` for aggregate upload and download rates on active Ethernet and Wi-Fi interfaces. Each sparkline shows the last 16 samples, scaled to its own peak.
+
+Use `type = now_playing` for track, artist, and playback progress in Apple Music. Open Music to see playback, and allow DeskStat to read Music if macOS prompts for Automation access.

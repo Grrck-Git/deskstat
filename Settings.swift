@@ -170,7 +170,7 @@ struct Settings {
         var identifiers = Set<String>()
         for widget in result {
             guard identifiers.insert(widget.id).inserted else { throw ConfigError(message: "Duplicate widget name \(widget.id).") }
-            guard ["metrics", "command", "weather", "markets", "chatgpt", "clock"].contains(widget.type) else {
+            guard ["metrics", "command", "weather", "markets", "chatgpt", "clock", "battery", "network", "now_playing"].contains(widget.type) else {
                 throw ConfigError(message: "Unknown widget type \(widget.type).")
             }
             if widget.type == "clock" {
