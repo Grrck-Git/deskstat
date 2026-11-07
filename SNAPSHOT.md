@@ -1,27 +1,24 @@
-# DeskStat 0.3.2 build snapshot
+# DeskStat 0.3.4 build snapshot
 
-Captured November 6, 2026, America/New_York. Application build 9 for Apple silicon, requiring macOS 13 or later.
+This version includes the custom app icon and the updated six-widget reset layout. The clock sits above Fastfetch. The shared theme uses green text, charcoal blocks at 0.75 opacity, and 25-point corners.
 
-This snapshot contains the native app source, build script, bundled example configuration, styled world-clock preview, and packaged application available from the v0.3.2 release.
+The shared weather default is Washington DC, configured with ZIP 20001. Personal reset settings can be supplied locally through the Git-ignored deskstat.local.conf file.
 
 ## Restore or build
 
-Extract and open DeskStat.app from the release download. Build from source using ./build.sh. Installation, configuration, and widget instructions are in README.md.
+Download and extract the Apple silicon application from the v0.3.4 GitHub release, or build from source using ./build.sh. Installation, configuration, and widget instructions are in README.md.
+
+The release application uses the shared reset layout. A local source build uses deskstat.local.conf when that file exists. Both builds read the user's active settings from ~/Library/Application Support/DeskStat/deskstat.conf.
 
 ## Build contents
 
 - CPU, memory, disk, and uptime metrics
-- ZIP-based weather and a market watchlist
-- Periodic command output, including support for Fastfetch
+- Washington DC weather and example market watchlist
+- Periodic command output with Fastfetch support
 - ChatGPT copy-and-open input
-- San Francisco, Austin, Washington DC, and GMT clock with cards and text styles
-- Global text and block colors, background opacity, and corner radius
-- Monochrome menu-bar icon and single-desktop window placement
+- Styled world clock for San Francisco, Austin, Washington DC, and GMT
+- Global text and block colors, opacity, and corner radius
+- Matching monochrome menu-bar and charcoal app icons
+- Single-desktop placement below normal application windows
 
-## Packaged app checksum
-
-SHA-256 for the original DeskStat.zip used for this snapshot
-
-```text
-bb1838c112b027a3406ee2c4652ca90ab25a9d756a08dc8ee45319a8d295c5b3
-```
+The release includes application and source archives with a SHA256SUMS file for verification.

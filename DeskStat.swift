@@ -410,7 +410,7 @@ final class DeskStat: NSObject, NSApplicationDelegate {
     @objc private func useExample() {
         let alert = NSAlert()
         alert.messageText = "Use the default widget layout?"
-        alert.informativeText = "This restores the saved default positions and sizes for the system, weather, market, ChatGPT, Fastfetch, and clock widgets, along with the global colors, background opacity, and corner radius. Your current settings will be saved beside the settings file as a backup. Weather needs your ZIP code. The market symbols are examples."
+        alert.informativeText = "This restores the saved default positions and sizes for the system, weather, market, ChatGPT, Fastfetch, and clock widgets, along with the global colors, background opacity, and corner radius. Your current settings will be saved beside the settings file as a backup. Weather uses the saved default location. The market symbols are examples."
         alert.addButton(withTitle: "Use Layout")
         alert.addButton(withTitle: "Cancel")
         NSApp.activate(ignoringOtherApps: true)

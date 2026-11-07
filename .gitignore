@@ -2,3 +2,4 @@
 *.app/
 *.zip
 snapshot/
+deskstat.local.conf

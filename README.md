@@ -6,7 +6,7 @@ A native macOS desktop monitor with independent text widgets, terminal-style met
 
 Quit the previous DeskStat, then open DeskStat.app. Existing settings continue to work and gain a ChatGPT input widget. To enable the full layout, choose **Use New Widget Layout…** from the DeskStat menu. The app saves your existing settings in a uniquely named backup before replacing them.
 
-The full layout contains system metrics, weather setup, an example market watchlist, ChatGPT input, Fastfetch, and a four-zone work clock. The reset layout uses your saved positions and sizes from this version. The Fastfetch widget is enabled in the default layout. Enter your own ZIP code and preferred market symbols with **Open Settings**, save, then choose **Reload Settings**.
+The full layout contains system metrics, weather setup, an example market watchlist, ChatGPT input, Fastfetch, and a four-zone work clock. The reset layout uses your saved positions and sizes from this version. The Fastfetch widget is enabled in the default layout. The shared weather default is Washington DC. Set your preferred location and market symbols with **Open Settings**, save, then choose **Reload Settings**.
 
 Settings live at `~/Library/Application Support/DeskStat/deskstat.conf`. An invalid file produces an error and leaves the active layout running. **Open Widget Guide** opens this guide.
 
@@ -49,10 +49,10 @@ Choose any order of `cpu`, `memory`, `disk`, and `uptime`. CPU samples aggregate
 ```ini
 [widget.machine]
 type = command
-left = 860
-top = 24
+left = 395
+top = 194
 width = 620
-height = 400
+height = 200
 command = fastfetch
 arguments = []
 refresh_seconds = 300
@@ -70,15 +70,15 @@ Commands run asynchronously with a minimum five-second refresh, no overlapping r
 type = weather
 left = 24
 top = 190
-width = 400
+width = 360
 height = 180
-zip = "10001"
+zip = "20001"
 country = US
 units = fahrenheit
 refresh_seconds = 900
 ```
 
-The ZIP is an example. Replace it with your own ZIP/postal code. Keep it quoted to preserve leading zeros. `country` is a two-letter country code. `units` accepts `fahrenheit` or `celsius`. An empty ZIP shows a setup message and makes no request. The panel shows the resolved place so you can check the lookup.
+The example ZIP selects Washington DC. Replace it with your preferred ZIP/postal code. Keep it quoted to preserve leading zeros. `country` is a two-letter country code. `units` accepts `fahrenheit` or `celsius`. An empty ZIP shows a setup message and makes no request. The panel shows the resolved place so you can check the lookup.
 
 Weather refreshes at most once every 15 minutes and shows current temperature and conditions, today's high/low, precipitation chance, and the source time in the location's timezone. It sends the configured postal code to Open-Meteo's geocoder, then requests weather for the returned coordinates. Location Services are a future addition.
 
@@ -89,10 +89,10 @@ Weather is supplied by [Open-Meteo](https://open-meteo.com/) under [CC BY 4.0](h
 ```ini
 [widget.markets]
 type = markets
-left = 440
-top = 24
-width = 400
-height = 280
+left = 24
+top = 566
+width = 360
+height = 220
 symbols = ["^GSPC", "VTI"]
 labels = ["S&P 500", "Total US market"]
 refresh_seconds = 300
@@ -111,7 +111,7 @@ The prototype uses Yahoo Finance's unofficial chart endpoint with no API key. Se
 type = chatgpt
 left = 24
 top = 390
-width = 400
+width = 360
 height = 160
 ```
 
@@ -123,10 +123,10 @@ Add a theme section anywhere outside a widget section, then save and choose **Re
 
 ```ini
 [theme]
-text_color = mint
+text_color = green
 background_color = charcoal
-background_opacity = 0.88
-corner_radius = 8
+background_opacity = 0.75
+corner_radius = 25
 ```
 
 Named colors are `mint`, `white`, `black`, `green`, `cyan`, `blue`, `yellow`, `amber`, `orange`, `red`, `pink`, `purple`, and `gray` (`grey` also works), `charcoal`, `darkgray`, and `navy`. Names are case-insensitive. Use a quoted six-digit RGB hex code for an exact color.
@@ -154,7 +154,7 @@ Corner radii are capped at half the smaller widget dimension so large values pro
 [widget.clock]
 type = clock
 left = 395
-top = 240
+top = 24
 width = 620
 height = 150
 refresh_seconds = 1
@@ -177,7 +177,15 @@ Install Apple's Command Line Tools, then run these commands from this folder.
 open DeskStat.app
 ```
 
-The build script stages and signs a fresh application before replacing the generated DeskStat.app. It includes the config and this guide. It does not change your active settings.
+The build script stages and signs a fresh application before replacing the generated DeskStat.app. It includes the config, app icon, and this guide. It does not change your active settings.
+
+### Local and shared reset defaults
+
+The tracked deskstat.conf contains the shared reset layout, with green text, 0.75 background opacity, 25-point corners, the clock above Fastfetch, and Washington DC weather.
+
+For a personal reset layout, place a deskstat.local.conf beside build.sh. This file is ignored by Git. When present, the build script bundles it as the application's reset configuration. Otherwise the script uses deskstat.conf. Both **Use New Widget Layout…** and first-launch settings creation use the configuration bundled in that build.
+
+GitHub release packages are built from the committed source archive, which contains the shared configuration. The local build can use its personal reset defaults independently.
 
 ```sh
 ./DeskStat.app/Contents/MacOS/DeskStat --check-config deskstat.conf
