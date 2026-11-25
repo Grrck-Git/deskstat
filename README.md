@@ -1,8 +1,15 @@
-# DeskStat 0.3.6
+# DeskStat 0.3.7
 
 A native macOS desktop monitor with independent text widgets, terminal-style meters, and a monochrome monitor icon in the menu bar. Requires macOS 13 or later. This build is for Apple silicon.
 
-## What’s new in 0.3.6
+## What’s new in 0.3.7
+
+- Refreshed system, weather, markets, battery, network and Now Playing typography to complement the world clock.
+- Thin system and battery meters, prominent weather temperature, aligned market quotes, and quieter status text.
+- Compact left-biased reset layout with 20-point gaps, charcoal blocks at 50% opacity and 14-point corners. Text color remains configurable globally.
+- Command output retains its terminal layout; provider refresh and cache behavior are unchanged.
+
+## Changes in 0.3.6
 
 - Removed the Ask ChatGPT widget from the desktop and reset layout.
 - Older config files still load, with retired ChatGPT sections omitted.

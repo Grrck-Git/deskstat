@@ -1,24 +1,15 @@
-# DeskStat 0.3.4 build snapshot
+# DeskStat 0.3.7 build snapshot
 
-This version includes the custom app icon and the updated six-widget reset layout. The clock sits above Fastfetch. The shared theme uses green text, charcoal blocks at 0.75 opacity, and 25-point corners.
+Local visual refresh: consistent headings, thin meters, prominent weather temperature, aligned market quotes and quiet status text. The eight-widget reset layout uses 20-point gaps, green text, charcoal blocks at 50% opacity and 14-point corners.
 
-The shared weather default is Washington DC, configured with ZIP 20001. Personal reset settings can be supplied locally through the Git-ignored deskstat.local.conf file.
+The shared weather default is Washington DC (ZIP 20001). Git-ignored deskstat.local.conf supplies the personal reset layout when building locally. Both builds read active settings from ~/Library/Application Support/DeskStat/deskstat.conf.
 
-## Restore or build
+Build with ./build.sh. README.md describes installation and configuration. The published release link in README.md continues to point to the latest published release, v0.3.5.
 
-Download and extract the Apple silicon application from the v0.3.4 GitHub release, or build from source using ./build.sh. Installation, configuration, and widget instructions are in README.md.
+## Rollback
 
-The release application uses the shared reset layout. A local source build uses deskstat.local.conf when that file exists. Both builds read the user's active settings from ~/Library/Application Support/DeskStat/deskstat.conf.
+The local tag rollback/pre-visual-refresh-0.3.6 preserves source commit 7c26d73 before this refresh. A separate private DeskStat-rollback-0.3.6.zip archive preserves the previous application, source and personal active/reset configuration, with restoration instructions. Keep the archive local because it contains personal configuration.
 
-## Build contents
+## Validation
 
-- CPU, memory, disk, and uptime metrics
-- Washington DC weather and example market watchlist
-- Periodic command output with Fastfetch support
-- ChatGPT copy-and-open input
-- Styled world clock for San Francisco, Austin, Washington DC, and GMT
-- Global text and block colors, opacity, and corner radius
-- Matching monochrome menu-bar and charcoal app icons
-- Single-desktop placement below normal application windows
-
-The release includes application and source archives with a SHA256SUMS file for verification.
+Compiled on macOS; packaged application signature verified. Shared and personal configurations validated. Native production views rendered at configured sizes. Compatibility and desktop panel checks cover old configuration files, click-through behavior, inability to take focus, negative window level and single-Space placement.

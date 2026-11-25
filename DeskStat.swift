@@ -22,6 +22,7 @@ final class WidgetController: NSObject {
     private let tint: NSColor
     private let clock: WorkClock?
     private let clockView: StyledClockView?
+    private let styledView: StyledWidgetView?
     private let cornerRadius: CGFloat
     private var metrics: [any Metric] = []
     private var network = NetworkActivity()
@@ -50,6 +51,8 @@ final class WidgetController: NSObject {
         clock = settings.type == "clock" ? WorkClock(settings) : nil
         clockView = settings.type == "clock" && settings.clockStyle == "cards"
             ? StyledClockView(settings: settings, tint: tint) : nil
+        styledView = ["metrics", "weather", "markets", "battery", "network", "now_playing"].contains(settings.type)
+            ? StyledWidgetView(settings: settings, tint: tint) : nil
         panel = DesktopPanel(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel],
                              backing: .buffered, defer: false)
         super.init()
@@ -74,6 +77,8 @@ final class WidgetController: NSObject {
         panel.contentView = background
         if let clockView {
             background.addSubview(clockView)
+        } else if let styledView {
+            background.addSubview(styledView)
         } else {
             scroll.drawsBackground = false
             scroll.hasVerticalScroller = false
@@ -128,6 +133,8 @@ final class WidgetController: NSObject {
         panel.setFrame(NSRect(x: x, y: y, width: width, height: height), display: true)
         if let clockView {
             clockView.frame = NSRect(x: 0, y: 0, width: width, height: height)
+        } else if let styledView {
+            styledView.frame = NSRect(x: 0, y: 0, width: width, height: height)
         } else {
             scroll.frame = NSRect(x: 14, y: 12, width: width - 28, height: height - 24)
             text.setFrameSize(NSSize(width: max(10000, width - 28), height: max(height - 24, text.frame.height)))
@@ -135,10 +142,19 @@ final class WidgetController: NSObject {
     }
 
     private func display(_ body: String) {
+        if let styledView { styledView.update(body); return }
         let heading = settings.type == "metrics" ? "DESKSTAT" : settings.id.uppercased()
         let rendered = NSMutableAttributedString(attributedString: ansiText(heading + "\n" + body, font: .monospacedSystemFont(ofSize: settings.fontSize, weight: .regular), color: tint))
         // Apply the global theme after interpreting ANSI so command colors follow it too.
         rendered.addAttribute(.foregroundColor, value: tint, range: NSRange(location: 0, length: rendered.length))
+        rendered.addAttributes([.font: NSFont.monospacedSystemFont(ofSize: 10, weight: .semibold),
+                                .foregroundColor: tint.withAlphaComponent(0.65)],
+                               range: NSRange(location: 0, length: (heading as NSString).length))
+        if let footer = rendered.string.range(of: "\nFetched ", options: .backwards) {
+            let range = NSRange(footer.lowerBound..<rendered.string.endIndex, in: rendered.string)
+            rendered.addAttributes([.font: NSFont.monospacedSystemFont(ofSize: 10, weight: .regular),
+                                    .foregroundColor: tint.withAlphaComponent(0.5)], range: range)
+        }
         text.textStorage?.setAttributedString(rendered)
         text.scrollToBeginningOfDocument(nil)
     }
