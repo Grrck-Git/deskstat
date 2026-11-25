@@ -54,12 +54,44 @@ struct Memory: Metric {
     }
 }
 
+struct DiskCapacity {
+    let free: Int64
+    let available: Int64?
+    var text: String {
+        func size(_ bytes: Int64) -> String {
+            ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
+        }
+        guard let available, available >= free else {
+            return "DISK    " + size(free) + " free\n        Purgeable unavailable"
+        }
+        // Important-usage capacity is a budget, not an exact count of purgeable files.
+        let reclaimable = available - free
+        return "DISK    " + size(available) + " available\n        "
+            + size(free) + " free · ~" + size(reclaimable) + " purgeable"
+    }
+}
+
 struct Disk: Metric {
-    func sample() -> String {
-        let path = FileManager.default.homeDirectoryForCurrentUser.path
-        guard let attributes = try? FileManager.default.attributesOfFileSystem(forPath: path),
-              let bytes = attributes[.systemFreeSize] as? NSNumber else { return "DISK    unavailable" }
-        return "DISK    " + ByteCountFormatter.string(fromByteCount: bytes.int64Value, countStyle: .file) + " free"
+    private var cached: String?
+    private var sampledAt: TimeInterval = -.infinity
+
+    mutating func sample() -> String {
+        let now = ProcessInfo.processInfo.systemUptime
+        if let cached, now - sampledAt < 60 { return cached }
+        // A fresh URL avoids retaining Foundation's cached resource values indefinitely.
+        let home = URL(fileURLWithPath: FileManager.default.homeDirectoryForCurrentUser.path)
+        let values = try? home.resourceValues(forKeys: [
+            .volumeAvailableCapacityKey, .volumeAvailableCapacityForImportantUsageKey
+        ])
+        let fallback = try? FileManager.default.attributesOfFileSystem(forPath: home.path)
+        guard let free = values?.volumeAvailableCapacity.map(Int64.init)
+                ?? (fallback?[.systemFreeSize] as? NSNumber)?.int64Value, free >= 0 else {
+            return "DISK    unavailable"
+        }
+        let output = DiskCapacity(free: free, available: values?.volumeAvailableCapacityForImportantUsage).text
+        cached = output
+        sampledAt = now
+        return output
     }
 }
 

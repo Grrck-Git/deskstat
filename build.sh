@@ -10,6 +10,7 @@ if [ -f deskstat.local.conf ]; then
 fi
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 MACOSX_DEPLOYMENT_TARGET=13.0 swiftc -module-cache-path "${TMPDIR:-/tmp}/deskstat-swift-cache" -O main.swift Settings.swift Clock.swift StyledWidget.swift Metrics.swift Providers.swift Activity.swift SettingsWindow.swift DeskStat.swift -o "$app/Contents/MacOS/DeskStat"
+cp PrivacyInfo.xcprivacy "$app/Contents/Resources/"
 cp Assets/AppIcon.icns "$app/Contents/Resources/"
 cp README.md "$app/Contents/Resources/"
 cp "$config" "$app/Contents/Resources/deskstat.conf"

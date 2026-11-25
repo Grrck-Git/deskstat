@@ -1,6 +1,8 @@
-# DeskStat 0.3.7 build snapshot
+# DeskStat 0.3.8 build snapshot
 
-Local visual refresh: consistent headings, thin meters, prominent weather temperature, aligned market quotes and quiet status text. The eight-widget reset layout uses 20-point gaps, green text, charcoal blocks at 50% opacity and 14-point corners.
+Disk capacity breakdown added: available, actual free and estimated purgeable, refreshed every 60 seconds.
+
+Visual refresh: consistent headings, thin meters, prominent weather temperature, aligned market quotes and quiet status text. The eight-widget reset layout uses 20-point gaps, green text, charcoal blocks at 50% opacity and 14-point corners.
 
 The shared weather default is Washington DC (ZIP 20001). Git-ignored deskstat.local.conf supplies the personal reset layout when building locally. Both builds read active settings from ~/Library/Application Support/DeskStat/deskstat.conf.
 

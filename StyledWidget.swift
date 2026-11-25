@@ -40,7 +40,7 @@ final class StyledWidgetView: NSView {
         label(title, 14, size: 10, alpha: 0.65, weight: .semibold)
         let lines = body.components(separatedBy: "\n")
         func quiet(_ line: String) -> Bool {
-            ["Fetched ", "Cached ·", "Last success ", "Quote ", "As of ", "Weather by ", "Yahoo Finance"].contains { line.hasPrefix($0) }
+            ["Fetched ", "Cached ·", "Last success ", "Quote ", "As of ", "Weather by ", "Yahoo Finance", "        "].contains { line.hasPrefix($0) }
         }
         func meter(_ line: String, y: CGFloat) -> Bool {
             guard line.contains("█") || line.contains("░"),
@@ -91,7 +91,7 @@ final class StyledWidgetView: NSView {
                     y += base + 6
                 }
             } else if meter(line, y: y) {
-                y += base + 15
+                y += base + 12
             } else {
                 let idle = settings.type == "now_playing" && (line.hasPrefix("Open Apple") || line.hasPrefix("Nothing playing"))
                 let size = subdued ? max(9, base - 3) : (settings.type == "now_playing" && i == 0 && !idle ? base + 4 : base)

@@ -1,8 +1,14 @@
-# DeskStat 0.3.7
+# DeskStat 0.3.8
 
 A native macOS desktop monitor with independent text widgets, terminal-style meters, and a monochrome monitor icon in the menu bar. Requires macOS 13 or later. This build is for Apple silicon.
 
-## What’s new in 0.3.7
+## What’s new in 0.3.8
+
+- Disk now shows available capacity, actual free space and an estimated purgeable amount, refreshed once a minute.
+- Available capacity uses macOS's important-usage budget; estimated purgeable space is the difference from actual free space. Finder may report a different estimate or update at a different time. Unsupported capacity queries show free space with “Purgeable unavailable”.
+- The disk breakdown fits the existing system widget without changing your configuration.
+
+## Changes in 0.3.7
 
 - Refreshed system, weather, markets, battery, network and Now Playing typography to complement the world clock.
 - Thin system and battery meters, prominent weather temperature, aligned market quotes, and quieter status text.
@@ -65,7 +71,7 @@ refresh_seconds = 2
 modules = cpu, memory, disk, uptime
 ```
 
-Choose any order of `cpu`, `memory`, `disk`, and `uptime`. CPU samples aggregate tick deltas. RAM is an estimate based on internal, wired, compressed, and purgeable pages. Disk reports free space on the filesystem containing your home folder.
+Choose any order of `cpu`, `memory`, `disk`, and `uptime`. CPU samples aggregate tick deltas. RAM is an estimate based on internal, wired, compressed, and purgeable pages. Disk reports available capacity, actual free space and estimated purgeable space on the volume containing your home folder. Disk readings refresh once a minute; no files are purged or deleted.
 
 ### Command output
 
