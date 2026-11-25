@@ -1,8 +1,13 @@
-# DeskStat 0.3.5
+# DeskStat 0.3.6
 
 A native macOS desktop monitor with independent text widgets, terminal-style meters, and a monochrome monitor icon in the menu bar. Requires macOS 13 or later. This build is for Apple silicon.
 
-## What’s new in 0.3.5
+## What’s new in 0.3.6
+
+- Removed the Ask ChatGPT widget from the desktop and reset layout.
+- Older config files still load, with retired ChatGPT sections omitted.
+
+## Changes in 0.3.5
 
 - Battery & Power shows charge, power source, and estimated time remaining when available.
 - Network Activity shows upload and download rates with sparklines.
@@ -13,9 +18,9 @@ A native macOS desktop monitor with independent text widgets, terminal-style met
 
 ## Start and upgrade
 
-Quit the previous DeskStat, then open DeskStat.app. Existing settings continue to work and gain a ChatGPT input widget. To enable the full layout, choose **Use New Widget Layout…** from the DeskStat menu. The app saves your existing settings in a uniquely named backup before replacing them.
+Quit the previous DeskStat, then open DeskStat.app. Existing settings continue to work. To enable the full layout, choose **Use New Widget Layout…** from the DeskStat menu. The app saves your existing settings in a uniquely named backup before replacing them.
 
-The full layout contains system metrics, weather, an example market watchlist, ChatGPT input, Fastfetch, a four-zone world clock, Battery & Power, Network Activity, and Now Playing. The reset layout uses your saved positions and sizes from this version. The Fastfetch widget is enabled in the default layout. The shared weather default is Washington DC. Set your preferred location and market symbols with **Open Settings**, then choose **Save & Apply**.
+The full layout contains system metrics, weather, an example market watchlist, Fastfetch, a four-zone world clock, Battery & Power, Network Activity, and Now Playing. The reset layout uses your saved positions and sizes from this version. The Fastfetch widget is enabled in the default layout. The shared weather default is Washington DC. Set your preferred location and market symbols with **Open Settings**, then choose **Save & Apply**.
 
 **Open Settings** opens a plain-text editor inside DeskStat. **Save & Apply** validates the settings, writes the same config file, and refreshes the widgets. **Edit Config File…** opens the file in your external editor. After external edits, choose **Reload Settings** to refresh the widgets, or **Reload From File** in the panel to refresh the editor.
 
@@ -29,16 +34,16 @@ All widgets accept these settings.
 
 | Setting | Meaning |
 | --- | --- |
-| `type` | `metrics`, `command`, `weather`, `markets`, `clock`, `chatgpt`, `battery`, `network`, or `now_playing` |
+| `type` | `metrics`, `command`, `weather`, `markets`, `clock`, `battery`, `network`, or `now_playing` |
 | `enabled` | `true` or `false`, default true |
 | `left`, `top` | Offset in points from the primary display's usable top-left corner |
 | `width`, `height` | Fixed widget size in points |
 | `font_size` | Monospace font size, 10–32 points |
 | `refresh_seconds` | Independent refresh interval, 1–86400 seconds |
 
-The usable desktop excludes the menu bar and Dock. Widgets are clamped to fit the primary display. Fixed-size output is clipped if it exceeds the widget bounds, so increase width or height for longer content. Monitoring widgets allow clicks through to the desktop. The ChatGPT widget accepts clicks and typing. Widgets stay on the desktop Space where they are created and sit below normal application windows. The ChatGPT panel sits above desktop icons to accept clicks. Restart DeskStat on the desktop where you want the widgets.
+The usable desktop excludes the menu bar and Dock. Widgets are clamped to fit the primary display. Fixed-size output is clipped if it exceeds the widget bounds, so increase width or height for longer content. Monitoring widgets allow clicks through to the desktop. Widgets stay on the desktop Space where they are created and sit below normal application windows. Restart DeskStat on the desktop where you want the widgets.
 
-Legacy single-widget settings remain supported. `right` is accepted as the older spelling of `left`. Existing files keep their offsets and metrics. The extra ChatGPT input appears below the original panel until you adopt a sectioned layout.
+Legacy single-widget settings remain supported. `right` is accepted as the older spelling of `left`. Existing files keep their offsets and metrics. Retired `type = chatgpt` sections are skipped when older files are loaded.
 
 ### System metrics
 
@@ -115,19 +120,6 @@ The panel shows the latest regular-session quote or published NAV, currency, dai
 
 The prototype uses Yahoo Finance's unofficial chart endpoint with no API key. Service availability, symbol coverage, and response format can change. Weather and market widgets cache their last successful output under `~/Library/Caches/DeskStat`. Cached/stale readings and update failures are labeled. The quote timestamp is separate from the retrieval time.
 
-### ChatGPT input
-
-```ini
-[widget.chatgpt]
-type = chatgpt
-left = 24
-top = 390
-width = 360
-height = 160
-```
-
-Click the field, type a question, and click **Copy & Open ChatGPT** or press Return. DeskStat replaces the clipboard with your question and opens the current ChatGPT app at `/Applications/ChatGPT.app` (bundle identifier `com.openai.codex`), falling back to `https://chatgpt.com/`. Paste and send there. Your question remains in the field. This widget uses no API key, local server, API billing, or background service. Responses appear in ChatGPT.
-
 ## Global widget appearance
 
 Add a theme section anywhere outside a widget section, then save and choose **Reload Settings**.
@@ -147,9 +139,9 @@ Named colors are `mint`, `white`, `black`, `green`, `cyan`, `blue`, `yellow`, `a
 text_color = "#FFD600"
 ```
 
-The color applies to all widget headings, content, command output, and ChatGPT input/button/status text. It also overrides ANSI foreground colors from commands such as Fastfetch. The menu-bar icon uses the system's monochrome appearance. Invalid colors leave the active layout in place and report an error. Old configs without a theme use mint.
+The color applies to all widget headings, content, and command output. It also overrides ANSI foreground colors from commands such as Fastfetch. The menu-bar icon uses the system's monochrome appearance. Invalid colors leave the active layout in place and report an error. Old configs without a theme use mint.
 
-The background settings apply to every widget, including the clock and ChatGPT panel. `background_color` accepts the same named colors or quoted six-digit hex codes as `text_color`.
+The background settings apply to every widget, including the clock. `background_color` accepts the same named colors or quoted six-digit hex codes as `text_color`.
 
 | Setting | Values |
 | --- | --- |
@@ -157,7 +149,7 @@ The background settings apply to every widget, including the clock and ChatGPT p
 | `background_opacity` | `0` for a fully transparent block through `1` for a solid block |
 | `corner_radius` | Radius in points, from `0` for square corners to `2000` for maximum rounding |
 
-Corner radii are capped at half the smaller widget dimension so large values produce rounded ends. Background opacity affects the surrounding block while text remains fully visible. ChatGPT's native input field and button retain their control surfaces. Old configs default to charcoal, 0.88 opacity, and an 8-point corner radius. Save and choose **Reload Settings** to apply changes.
+Corner radii are capped at half the smaller widget dimension so large values produce rounded ends. Background opacity affects the surrounding block while text remains fully visible. Old configs default to charcoal, 0.88 opacity, and an 8-point corner radius. Save and choose **Reload Settings** to apply changes.
 
 ### Work clock
 

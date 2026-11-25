@@ -3,26 +3,8 @@ import CryptoKit
 
 @MainActor
 final class DesktopPanel: NSPanel {
-    override var canBecomeKey: Bool { !ignoresMouseEvents }
-
-    override func sendEvent(_ event: NSEvent) {
-        if event.type == .leftMouseDown, !ignoresMouseEvents {
-            NSApp.activate(ignoringOtherApps: true)
-            makeKey()
-        }
-        super.sendEvent(event)
-    }
+    override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
-}
-
-@MainActor
-final class ChatInputField: NSTextField {
-    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
-}
-
-@MainActor
-final class ChatOpenButton: NSButton {
-    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 }
 
 struct CachedReading: Codable {
@@ -36,8 +18,6 @@ final class WidgetController: NSObject {
     let settings: WidgetSettings
     private let panel: DesktopPanel
     private let text = NSTextView()
-    private let input = ChatInputField()
-    private let status = NSTextField(labelWithString: "")
     private let scroll = NSScrollView()
     private let tint: NSColor
     private let clock: WorkClock?
@@ -70,22 +50,18 @@ final class WidgetController: NSObject {
         clock = settings.type == "clock" ? WorkClock(settings) : nil
         clockView = settings.type == "clock" && settings.clockStyle == "cards"
             ? StyledClockView(settings: settings, tint: tint) : nil
-        let interactive = settings.type == "chatgpt"
-        let style: NSWindow.StyleMask = interactive ? [.borderless] : [.borderless, .nonactivatingPanel]
-        panel = DesktopPanel(contentRect: .zero, styleMask: style, backing: .buffered, defer: false)
+        panel = DesktopPanel(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel],
+                             backing: .buffered, defer: false)
         super.init()
-        // Finder's desktop icon window also receives clicks in empty desktop areas.
-        // Put the input panel above it so ordinary mouse clicks can reach the controls.
-        let desktopLevel: CGWindowLevelKey = interactive ? .desktopIconWindow : .desktopWindow
         panel.becomesKeyOnlyIfNeeded = false
         // Changing the floating flag resets NSPanel.level. Assign the desktop level last.
         panel.isFloatingPanel = false
-        panel.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(desktopLevel)) + 1)
+        panel.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopWindow)) + 1)
         panel.collectionBehavior = [.managed, .ignoresCycle]
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.hasShadow = false
-        panel.ignoresMouseEvents = settings.type != "chatgpt"
+        panel.ignoresMouseEvents = true
         panel.hidesOnDeactivate = false
         let background = NSView()
         background.wantsLayer = true
@@ -96,9 +72,7 @@ final class WidgetController: NSObject {
             alpha: CGFloat(backgroundOpacity)).cgColor
         background.layer?.masksToBounds = true
         panel.contentView = background
-        if settings.type == "chatgpt" {
-            makeChat(in: background)
-        } else if let clockView {
+        if let clockView {
             background.addSubview(clockView)
         } else {
             scroll.drawsBackground = false
@@ -127,82 +101,20 @@ final class WidgetController: NSObject {
         }
         reposition()
         refresh()
-        if settings.type != "chatgpt" {
-            let minimum: Double
-            switch settings.type {
-            case "weather": minimum = 900
-            case "markets": minimum = 300
-            case "command": minimum = 5
-            case "now_playing": minimum = 3
-            default: minimum = 1
-            }
-            let interval = max(minimum, settings.interval)
-            let next = Timer(timeInterval: interval, target: self, selector: #selector(refresh), userInfo: nil, repeats: true)
-            next.tolerance = interval * 0.1
-            RunLoop.main.add(next, forMode: .common)
-            timer = next
+        let minimum: Double
+        switch settings.type {
+        case "weather": minimum = 900
+        case "markets": minimum = 300
+        case "command": minimum = 5
+        case "now_playing": minimum = 3
+        default: minimum = 1
         }
+        let interval = max(minimum, settings.interval)
+        let next = Timer(timeInterval: interval, target: self, selector: #selector(refresh), userInfo: nil, repeats: true)
+        next.tolerance = interval * 0.1
+        RunLoop.main.add(next, forMode: .common)
+        timer = next
         panel.orderFrontRegardless()
-    }
-
-    private func makeChat(in view: NSView) {
-        let heading = NSTextField(labelWithString: "ASK CHATGPT")
-        heading.font = .monospacedSystemFont(ofSize: settings.fontSize, weight: .medium)
-        heading.textColor = tint
-        heading.frame = NSRect(x: 14, y: settings.height - 34, width: settings.width - 28, height: 22)
-        view.addSubview(heading)
-        input.placeholderString = "Type a question…"
-        input.font = .monospacedSystemFont(ofSize: settings.fontSize, weight: .regular)
-        input.textColor = tint
-        input.placeholderAttributedString = NSAttributedString(string: "Type a question…",
-            attributes: [.foregroundColor: tint.withAlphaComponent(0.55), .font: input.font!])
-        input.frame = NSRect(x: 14, y: settings.height - 72, width: settings.width - 28, height: 28)
-        input.target = self
-        input.action = #selector(askChatGPT)
-        view.addSubview(input)
-        let button = ChatOpenButton(title: "Copy & Open ChatGPT", target: self, action: #selector(askChatGPT))
-        button.bezelStyle = .rounded
-        button.attributedTitle = NSAttributedString(string: button.title,
-            attributes: [.foregroundColor: tint, .font: NSFont.systemFont(ofSize: NSFont.systemFontSize)])
-        button.frame = NSRect(x: 10, y: settings.height - 110, width: min(230, settings.width - 20), height: 30)
-        view.addSubview(button)
-        status.font = .systemFont(ofSize: 11)
-        status.textColor = tint
-        status.stringValue = "Then paste and send in ChatGPT."
-        status.maximumNumberOfLines = 2
-        status.frame = NSRect(x: 14, y: 8, width: settings.width - 28, height: 30)
-        view.addSubview(status)
-    }
-
-    @objc private func askChatGPT() {
-        let question = input.stringValue.trimmed
-        guard !question.isEmpty else {
-            status.stringValue = "Type a question first."
-            panel.makeFirstResponder(input)
-            return
-        }
-        NSPasteboard.general.clearContents()
-        guard NSPasteboard.general.setString(question, forType: .string) else {
-            status.stringValue = "Could not copy. Try again."
-            return
-        }
-        let app = URL(fileURLWithPath: "/Applications/ChatGPT.app")
-        if let bundle = Bundle(url: app), bundle.bundleIdentifier == "com.openai.codex",
-           let executable = bundle.executableURL,
-           FileManager.default.isExecutableFile(atPath: executable.path) {
-            NSWorkspace.shared.openApplication(at: app, configuration: NSWorkspace.OpenConfiguration()) { [weak self] _, error in
-                Task { @MainActor [weak self] in
-                    guard let self else { return }
-                    if error != nil { self.openChatWebsite() }
-                    else { self.status.stringValue = "Copied. Paste and send in ChatGPT." }
-                }
-            }
-        } else { openChatWebsite() }
-    }
-
-    private func openChatWebsite() {
-        let opened = NSWorkspace.shared.open(URL(string: "https://chatgpt.com/")!)
-        status.stringValue = opened ? "Copied. Paste and send in ChatGPT." : "Copied. Open ChatGPT and paste."
     }
 
     func reposition() {
@@ -216,7 +128,7 @@ final class WidgetController: NSObject {
         panel.setFrame(NSRect(x: x, y: y, width: width, height: height), display: true)
         if let clockView {
             clockView.frame = NSRect(x: 0, y: 0, width: width, height: height)
-        } else if settings.type != "chatgpt" {
+        } else {
             scroll.frame = NSRect(x: 14, y: 12, width: width - 28, height: height - 24)
             text.setFrameSize(NSSize(width: max(10000, width - 28), height: max(height - 24, text.frame.height)))
         }
@@ -249,7 +161,6 @@ final class WidgetController: NSObject {
     @objc private func refresh() {
         guard !stopped, task == nil else { return }
         switch settings.type {
-        case "chatgpt": return
         case "battery":
             display(batteryText())
             return
@@ -413,16 +324,7 @@ final class DeskStat: NSObject, NSApplicationDelegate {
     }
 
     private func apply(_ next: Settings) {
-        var layout = next.widgets
-        // Preserve the original panel and add the requested input widget for old configurations.
-        if next.legacy {
-            var chat = WidgetSettings(id: "chatgpt")
-            chat.type = "chatgpt"
-            chat.top = 200
-            chat.height = 160
-            layout.append(chat)
-        }
-        let enabled = layout.filter(\.enabled)
+        let enabled = next.widgets.filter(\.enabled)
         for widget in widgets { widget.stop() }
         widgets = enabled.map {
             WidgetController($0, textColor: next.textColor, backgroundColor: next.backgroundColor,
@@ -433,7 +335,7 @@ final class DeskStat: NSObject, NSApplicationDelegate {
     @objc private func useExample() {
         let alert = NSAlert()
         alert.messageText = "Use the default widget layout?"
-        alert.informativeText = "This restores the saved default positions and sizes for the system, weather, market, ChatGPT, Fastfetch, clock, battery, network, and Now Playing widgets, along with the global colors, background opacity, and corner radius. Your current settings will be saved beside the settings file as a backup. Weather uses the saved default location. The market symbols are examples."
+        alert.informativeText = "This restores the saved default positions and sizes for the system, weather, market, Fastfetch, clock, battery, network, and Now Playing widgets, along with the global colors, background opacity, and corner radius. Your current settings will be saved beside the settings file as a backup. Weather uses the saved default location. The market symbols are examples."
         alert.addButton(withTitle: "Use Layout")
         alert.addButton(withTitle: "Cancel")
         NSApp.activate(ignoringOtherApps: true)

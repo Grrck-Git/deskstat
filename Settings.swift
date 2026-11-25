@@ -187,9 +187,6 @@ struct Settings {
                     throw ConfigError(message: "Clock time_format must be 12h or 24h.")
                 }
             }
-            if widget.type == "chatgpt", widget.height < 150 || widget.width < 300 {
-                throw ConfigError(message: "ChatGPT widgets need width of at least 300 and height of at least 150.")
-            }
             guard !widget.modules.isEmpty, widget.modules.allSatisfy({ metricFactories[$0] != nil }) else {
                 throw ConfigError(message: "Use cpu, memory, disk, or uptime for modules in \(widget.id).")
             }
@@ -200,7 +197,8 @@ struct Settings {
                 throw ConfigError(message: "Choose between 1 and 12 market symbols.")
             }
         }
-        widgets = result
+        // Older configs can still contain the retired ChatGPT widget.
+        widgets = result.filter { $0.type != "chatgpt" }
         legacy = !sectioned
     }
 }
