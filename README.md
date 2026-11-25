@@ -1,8 +1,14 @@
-# DeskStat 0.3.8
+# DeskStat 0.3.9
 
 A native macOS desktop monitor with independent text widgets, terminal-style meters, and a monochrome monitor icon in the menu bar. Requires macOS 13 or later. This build is for Apple silicon.
 
-## What’s new in 0.3.8
+## What’s new in 0.3.9
+
+- Now Playing reads the active macOS media session, including compatible browser and music apps. Shows title, artist, source app, playback state and progress when supplied.
+- A small read-only BSD-licensed mediaremote adapter is bundled; no Homebrew package, account, network service or background daemon is required.
+- Apple Music remains a fallback when system metadata is absent. Idle and unavailable states clear the previous track.
+
+## Changes in 0.3.8
 
 - Disk now shows available capacity, actual free space and an estimated purgeable amount, refreshed once a minute.
 - Available capacity uses macOS's important-usage budget; estimated purgeable space is the difference from actual free space. Finder may report a different estimate or update at a different time. Unsupported capacity queries show free space with “Purgeable unavailable”.
@@ -216,4 +222,8 @@ Each metric implements the `Metric` protocol and is registered in `metricFactori
 
 Use `type = battery` for charge, power source, and the Mac's estimated time remaining. Use `type = network` for aggregate upload and download rates on active Ethernet and Wi-Fi interfaces. Each sparkline shows the last 16 samples, scaled to its own peak.
 
-Use `type = now_playing` for track, artist, and playback progress in Apple Music. Open Music to see playback, and allow DeskStat to read Music if macOS prompts for Automation access.
+Use `type = now_playing` for the active macOS Now Playing session. Compatible apps such as Safari, Spotify and Apple Music can supply a title, artist, source app, playback state and progress. Apps that do not publish media metadata (including many games and alerts) cannot be identified. Only the system-selected session is displayed. Missing duration, including live streams, omits the progress bar.
+
+The bundled read-only adapter is loaded by the system Perl process for each refresh (minimum 3 seconds), with a 5-second timeout. It installs no service and sends no playback data over the network. Apple Music is queried only when it is already running and system metadata is absent; that fallback may request macOS Automation permission. The widget clears its track when no media is reported and displays an unavailable status if the reader fails.
+
+The adapter uses Apple's private MediaRemote framework, which can change with macOS updates. Its BSD-3-Clause source, license, pinned upstream reference and DeskStat modifications are in `Vendor/MediaRemoteMini`. Based on [mediaremote-adapter](https://github.com/ungive/mediaremote-adapter), using the BSD subset from [nowplaying-cli](https://github.com/kirtan-shah/nowplaying-cli). The GPL CLI is not bundled.

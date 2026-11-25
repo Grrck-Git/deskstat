@@ -1,4 +1,4 @@
-# DeskStat 0.3.8 build snapshot
+# DeskStat 0.3.9 build snapshot
 
 Disk capacity breakdown added: available, actual free and estimated purgeable, refreshed every 60 seconds.
 
@@ -15,3 +15,7 @@ The local tag rollback/pre-visual-refresh-0.3.6 preserves source commit 7c26d73 
 ## Validation
 
 Compiled on macOS; packaged application signature verified. Shared and personal configurations validated. Native production views rendered at configured sizes. Compatibility and desktop panel checks cover old configuration files, click-through behavior, inability to take focus, negative window level and single-Space placement.
+
+## System Now Playing update
+
+Reads the active macOS media session through the bundled BSD-licensed adapter, with an Apple Music fallback. The local rollback/pre-system-now-playing-0.3.8 tag and separate DeskStat-0.3.8-before-system-now-playing.zip preserve the prior build.

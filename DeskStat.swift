@@ -183,10 +183,6 @@ final class WidgetController: NSObject {
         case "network":
             display(network.sample())
             return
-        case "now_playing" where NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.Music").isEmpty:
-            reading = nil
-            display("Open Apple Music to see playback.")
-            return
         case "clock":
             if let clockView { clockView.update(clock!.readings()) }
             else { display(clock!.sample()) }
@@ -224,6 +220,11 @@ final class WidgetController: NSObject {
                 }
             } catch {
                 guard !Task.isCancelled, !stopped else { return }
+                if settings.type == "now_playing" {
+                    reading = nil
+                    display("Now Playing unavailable.\n" + error.localizedDescription)
+                    return
+                }
                 let previous = reading.map { $0.text + "\nLast success " + self.stamp($0.date) + "\n" } ?? ""
                 display(previous + "Update failed · " + error.localizedDescription)
             }

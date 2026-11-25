@@ -100,7 +100,7 @@ with timeout of 4 seconds
 end timeout
 """
 
-func nowPlayingText(_ settings: WidgetSettings) async throws -> String {
+func appleMusicText(_ settings: WidgetSettings) async throws -> String {
     var request = settings
     request.command = "/usr/bin/osascript"
     request.arguments = ["-e", musicSnapshotScript]
@@ -126,9 +126,69 @@ func musicDisplayText(_ output: String) -> String {
     let artist = parts.count == 5 ? parts[4].replacingOccurrences(of: "\n", with: " ") : ""
     let state = parts[0] == "paused" ? "Paused" : "Playing"
     let title = parts[3]
-    let subtitle = artist.isEmpty ? state : "\(artist) · \(state)"
+    let subtitle = artist.isEmpty ? "Music · \(state)" : "\(artist) · Music · \(state)"
     guard let position = Double(parts[1].replacingOccurrences(of: ",", with: ".")),
           let duration = Double(parts[2].replacingOccurrences(of: ",", with: ".")),
           position.isFinite, duration.isFinite, duration > 0 else { return "\(title)\n\(subtitle)" }
     return "\(title)\n\(subtitle)\n" + bar(position / duration)
+}
+
+
+struct SystemNowPlaying: Decodable {
+    let title: String?
+    let artist: String?
+    let bundleIdentifier: String?
+    let parentApplicationBundleIdentifier: String?
+    let processIdentifier: Int32?
+    let playing: Bool?
+    let duration: Double?
+    let elapsedTime: Double?
+    let elapsedTimeNow: Double?
+
+    func display(source: String) -> String? {
+        func clean(_ value: String) -> String {
+            value.components(separatedBy: .newlines).joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        guard let title, !clean(title).isEmpty else { return nil }
+        let subtitle = [artist.map(clean), source, playing == true ? "Playing" : "Paused"]
+            .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+        var output = clean(title) + "\n" + subtitle
+        if let duration, duration.isFinite, duration > 0,
+           let position = elapsedTimeNow ?? elapsedTime, position.isFinite {
+            output += "\n" + bar(max(0, position) / duration)
+        }
+        return output
+    }
+}
+
+@MainActor
+func nowPlayingText(_ settings: WidgetSettings) async throws -> String {
+    var failed = false
+    if let script = Bundle.main.url(forResource: "read-now-playing", withExtension: "pl"),
+       let frameworks = Bundle.main.privateFrameworksURL {
+        var request = settings
+        request.command = "/usr/bin/perl"
+        request.arguments = [script.path, frameworks.appendingPathComponent("MediaRemoteMini.dylib").path]
+        request.timeout = 5
+        do {
+            let raw = try await commandText(request)
+            let snapshot = try JSONDecoder().decode(SystemNowPlaying?.self, from: Data(raw.utf8))
+            if let snapshot {
+                let bundleID = snapshot.parentApplicationBundleIdentifier ?? snapshot.bundleIdentifier
+                let process = snapshot.processIdentifier.flatMap { NSRunningApplication(processIdentifier: $0) }
+                let source = bundleID.flatMap { NSRunningApplication.runningApplications(withBundleIdentifier: $0).first?.localizedName }
+                    ?? process?.localizedName ?? bundleID ?? "Media"
+                if let display = snapshot.display(source: source) { return display }
+            }
+        } catch {
+            try Task.checkCancellation()
+            failed = true
+        }
+    } else { failed = true }
+    // Never launch Music. Read it only if already open and system metadata is absent.
+    if !NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.Music").isEmpty {
+        return try await appleMusicText(settings)
+    }
+    return failed ? "Now Playing unavailable.\nSystem media reader could not be reached."
+        : "Nothing playing."
 }

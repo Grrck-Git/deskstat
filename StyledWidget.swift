@@ -93,7 +93,7 @@ final class StyledWidgetView: NSView {
             } else if meter(line, y: y) {
                 y += base + 12
             } else {
-                let idle = settings.type == "now_playing" && (line.hasPrefix("Open Apple") || line.hasPrefix("Nothing playing"))
+                let idle = settings.type == "now_playing" && (line.hasPrefix("Open Apple") || line.hasPrefix("Nothing playing") || line.hasPrefix("Now Playing unavailable"))
                 let size = subdued ? max(9, base - 3) : (settings.type == "now_playing" && i == 0 && !idle ? base + 4 : base)
                 label(line, y, size: size, alpha: subdued || idle ? 0.5 : 0.9,
                       weight: settings.type == "now_playing" && i == 0 && !idle ? .medium : .regular)
