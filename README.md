@@ -33,7 +33,7 @@ A native macOS desktop monitor with independent text widgets, terminal-style met
 - Now Playing shows track, artist, and progress from Apple Music. macOS may request Automation permission.
 - The in-app settings editor validates edits and saves them to the same config file. The config comments list supported settings, ranges, and theme colors.
 
-[Download v0.3.5 and view the release notes](https://github.com/Grrck-Git/deskstat/releases/tag/v0.3.5)
+[Download v0.3.9 and view the release notes](https://github.com/Grrck-Git/deskstat/releases/tag/v0.3.9)
 
 ## Start and upgrade
 
@@ -203,7 +203,7 @@ The build script stages and signs a fresh application before replacing the gener
 
 ### Local and shared reset defaults
 
-The tracked deskstat.conf contains the shared reset layout, with green text, 0.75 background opacity, 25-point corners, the clock above Fastfetch, and Washington DC weather.
+The tracked deskstat.conf contains the shared reset layout, with green text, 0.5 background opacity, 14-point corners, 20-point gaps, the clock above Fastfetch, Markets below Weather, and Washington DC weather.
 
 For a personal reset layout, place a deskstat.local.conf beside build.sh. This file is ignored by Git. When present, the build script bundles it as the application's reset configuration. Otherwise the script uses deskstat.conf. Both **Use New Widget Layout…** and first-launch settings creation use the configuration bundled in that build.
 

@@ -6,7 +6,7 @@ Visual refresh: consistent headings, thin meters, prominent weather temperature,
 
 The shared weather default is Washington DC (ZIP 20001). Git-ignored deskstat.local.conf supplies the personal reset layout when building locally. Both builds read active settings from ~/Library/Application Support/DeskStat/deskstat.conf.
 
-Build with ./build.sh. README.md describes installation and configuration. The published release link in README.md continues to point to the latest published release, v0.3.5.
+Build with ./build.sh. README.md describes installation and configuration. The v0.3.9 GitHub release includes the Apple silicon application, matching source archive and SHA-256 checksums. Its bundled reset configuration uses the shared Washington DC default.
 
 ## Rollback
 
